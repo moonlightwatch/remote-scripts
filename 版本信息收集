@@ -1,0 +1,47 @@
+import os
+import pymysql
+
+report_md = ""
+
+# EngineServer
+es_version = os.popen("/bugfeel/engineserver/server -v").read()
+report_md += f"## EngineServer版本\n\n```\n{es_version}```\n\n"
+
+# Engines
+report_md += "## 引擎版本\n\n"
+mysql_pwd = ""
+with open(file="/bugfeel/passwd", mode="r", encoding="utf8") as f:
+    mysql_pwd = f.readline().replace("mysql_passwd=", "").strip()
+
+report_md += "|版本|类型|更新日期|python版本|\n"
+report_md += "|---|---|---|---|\n"
+
+conn = pymysql.connect(host="localhost", user="root", passwd=mysql_pwd, db="bugfeel", port=3306)
+cur = conn.cursor()
+cur.execute("select version, date, type, language from wss_corefile where active=1;")
+for item in cur.fetchall():
+    report_md += f"|{item[0]}|{item[2]}|{item[1]}|{item[3]}|\n"
+report_md += "\n\n"
+cur.close()
+conn.close()
+
+# Docker
+
+report_md += "## Docker\n\n"
+report_md += "### 镜像信息\n\n"
+docker_images = os.popen("docker images --no-trunc").read()
+while "   " in docker_images:
+    docker_images = docker_images.replace("   ", "  ")
+docker_images = docker_images.replace("\n", "|\n|").replace("  ", "|").replace("\n", "\n|---|---|---|---|---|\n", 1)
+
+report_md += f"{docker_images}\n\n"
+
+report_md += "### docker-compse\n\n"
+
+report_md += "```yml\n"
+with open(file="/engines/docker-compose.yml", mode="r", encoding="utf8") as f:
+    report_md += f.read()
+report_md += "```\n\n"
+
+with open(file="bugfeel_info.md", mode="w", encoding="utf8") as f:
+    f.write(report_md)
